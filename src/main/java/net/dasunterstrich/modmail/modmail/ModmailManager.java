@@ -119,12 +119,12 @@ public class ModmailManager {
             }
 
             var userID = modmailEntry.get().getKey();
-            var user = jda.retrieveUserById(userID).complete();
-            user.openPrivateChannel()
+            jda.retrieveUserById(userID)
+                    .flatMap(User::openPrivateChannel)
                     .queue(channel -> {
                         channel.sendMessageEmbeds(EmbedUtils.buildEmbed("New Message from the Bocchicord Moderation Team", messageContent, Color.GREEN)).queue();
 
-                        databaseHandler.addModmailMessage(user, false, messageContent);
+                        databaseHandler.addModmailMessage(channel.getUser(), false, messageContent);
 
                         if (attachments.isEmpty()) {
                             success.accept(true);
