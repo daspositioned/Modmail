@@ -1,7 +1,10 @@
 package net.dasunterstrich.modmail;
 
+import io.github.cdimascio.dotenv.Dotenv;
+
 public class Main {
     public static void main(String[] args) {
-        new Bot().start();
+        var env = Dotenv.load();
+        new Bot().start(env);
     }
 }

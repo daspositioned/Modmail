@@ -1,5 +1,6 @@
 package net.dasunterstrich.modmail;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import net.dasunterstrich.modmail.database.DatabaseHandler;
 import net.dasunterstrich.modmail.listener.DirectMessageListener;
 import net.dasunterstrich.modmail.listener.SlashCommandListener;
@@ -23,9 +24,9 @@ import java.nio.file.Path;
 public class Bot {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public void start() {
-        var databaseHandler = initializeDatabase();
-        var modmailManager = new ModmailManager(databaseHandler);
+    public void start(Dotenv config) {
+        var databaseHandler = initializeDatabase(config);
+        var modmailManager = new ModmailManager(databaseHandler, config);
 
         JDA jda = JDABuilder.createDefault(readToken())
                 .setActivity(Activity.playing("with Bocchicord"))
@@ -53,17 +54,14 @@ public class Bot {
         }
     }
 
-    private DatabaseHandler initializeDatabase() {
+    private DatabaseHandler initializeDatabase(Dotenv config) {
         var databaseHandler = new DatabaseHandler();
-        databaseHandler.initializeDatabase();
+        databaseHandler.initializeDatabase(config.get("POSTGRES_USER"), config.get("POSTGRES_PASSWORD"));
 
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                databaseHandler.closeDataSource();
-                logger.info("Database connection shutdown!");
-            }
-        });
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            databaseHandler.closeDataSource();
+            logger.info("Database connection shutdown!");
+        }));
 
         logger.info("Database connection established!");
         return databaseHandler;

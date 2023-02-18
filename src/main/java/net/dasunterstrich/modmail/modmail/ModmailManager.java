@@ -1,5 +1,6 @@
 package net.dasunterstrich.modmail.modmail;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import net.dasunterstrich.modmail.database.DatabaseHandler;
 import net.dasunterstrich.modmail.utils.AttachmentSender;
 import net.dasunterstrich.modmail.utils.DiscordUtils;
@@ -22,10 +23,12 @@ import java.util.function.Consumer;
 public class ModmailManager {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final DatabaseHandler databaseHandler;
+    private final Dotenv config;
     private final HashMap<Long, Long> modmailThreads = new HashMap<>();
 
-    public ModmailManager(DatabaseHandler databaseHandler) {
+    public ModmailManager(DatabaseHandler databaseHandler, Dotenv config) {
         this.databaseHandler = databaseHandler;
+        this.config = config;
 
         try (var connection = databaseHandler.getConnection(); var statement = connection.createStatement()) {
             var resultSet = statement.executeQuery("SELECT * FROM modmail_threads");
@@ -45,12 +48,12 @@ public class ModmailManager {
 
         try {
             var modmailThreadID = getModmailThread(user);
-            var modmailThread = jda.getGuildById(497092213034188806L).getThreadChannelById(modmailThreadID);
+            var modmailThread = jda.getGuildById(config.get("GUILD_ID")).getThreadChannelById(modmailThreadID);
             if (modmailThread == null) throw new IllegalStateException();
 
             if (!content.isEmpty()) {
                 modmailThread.sendMessageEmbeds(EmbedUtils.buildEmbed(content, Color.GREEN)).queue(message -> {
-                    var modmailNotificationChannel = modmailThread.getGuild().getTextChannelById(1076526615036706866L);
+                    var modmailNotificationChannel = modmailThread.getGuild().getTextChannelById(config.get("NOTIFICATION_CHANNEL_ID"));
                     var embed = new EmbedBuilder()
                             .setTitle("New Message from " + user.getAsTag(), DiscordUtils.getMessageLink(message))
                             .setTimestamp(Instant.now())
@@ -82,8 +85,8 @@ public class ModmailManager {
 
     private void createModmailThread(User user) throws SQLException {
         var jda = user.getJDA();
-        var threadID = jda.getGuildById(497092213034188806L)
-                .getForumChannelById(1076472547106889749L)
+        var threadID = jda.getGuildById(config.get("GUILD_ID"))
+                .getForumChannelById(config.get("FORUM_ID"))
                 .createForumPost(user.getAsTag() + " (" + user.getId() + ")", MessageCreateData.fromContent("New modmail"))
                 .complete()
                 .getThreadChannel()

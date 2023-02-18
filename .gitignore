@@ -3,3 +3,5 @@
 build
 logs
 token.txt
+.env
+Modmail.iml
