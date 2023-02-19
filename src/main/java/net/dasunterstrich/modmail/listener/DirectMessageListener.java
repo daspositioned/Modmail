@@ -1,5 +1,8 @@
 package net.dasunterstrich.modmail.listener;
 
+import io.github.cdimascio.dotenv.Dotenv;
+import net.dasunterstrich.modmail.database.DatabaseHandler;
+import net.dasunterstrich.modmail.modmail.BlocklistManager;
 import net.dasunterstrich.modmail.modmail.ModmailManager;
 import net.dasunterstrich.modmail.utils.EmbedUtils;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
@@ -11,9 +14,13 @@ import java.awt.*;
 
 public class DirectMessageListener extends ListenerAdapter {
     private final ModmailManager modmailManager;
+    private final BlocklistManager blocklistManager;
+    private final Dotenv config;
 
-    public DirectMessageListener(ModmailManager modmailManager) {
+    public DirectMessageListener(ModmailManager modmailManager, BlocklistManager blocklistManager, Dotenv config) {
         this.modmailManager = modmailManager;
+        this.blocklistManager = blocklistManager;
+        this.config = config;
     }
 
     @Override
@@ -27,9 +34,9 @@ public class DirectMessageListener extends ListenerAdapter {
         }
     }
 
-    private void onGuildThreadMessage(MessageReceivedEvent event) { // TODO: Cooldown
+    private void onGuildThreadMessage(MessageReceivedEvent event) {
         var threadChannel = (ThreadChannel) event.getChannel();
-        if (threadChannel.getParentChannel().getIdLong() != 1076472547106889749L) return;
+        if (!threadChannel.getParentChannel().getId().equals(config.get("FORUM_ID"))) return;
 
         var messageContent = event.getMessage().getContentRaw();
         if (!messageContent.startsWith("!")) return;
@@ -45,11 +52,18 @@ public class DirectMessageListener extends ListenerAdapter {
                                 Color.RED)
                 ).queue();
             }
+        }, disabledDMs -> {
+            event.getChannel().sendMessageEmbeds(EmbedUtils.buildEmbed("User disabled direct messages", Color.RED)).queue();
         });
     }
 
     private void onPrivateMessage(MessageReceivedEvent event) {
         var user = event.getAuthor();
+        if (blocklistManager.isBlocklisted(user)) {
+            event.getChannel().sendMessageEmbeds(EmbedUtils.buildEmbed("You are blocked from submitting new modmails", Color.RED)).queue();
+            return;
+        }
+
         var messageContent = event.getMessage().getContentRaw();
         var messageAttachments = event.getMessage().getAttachments();
         modmailManager.sendModmailMessage(user, messageContent, messageAttachments, success -> {

@@ -23,11 +23,13 @@ import java.util.function.Consumer;
 public class ModmailManager {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final DatabaseHandler databaseHandler;
+    private final BlocklistManager blocklistManager;
     private final Dotenv config;
     private final HashMap<Long, Long> modmailThreads = new HashMap<>();
 
-    public ModmailManager(DatabaseHandler databaseHandler, Dotenv config) {
+    public ModmailManager(DatabaseHandler databaseHandler, BlocklistManager blocklistManager, Dotenv config) {
         this.databaseHandler = databaseHandler;
+        this.blocklistManager = blocklistManager;
         this.config = config;
 
         try (var connection = databaseHandler.getConnection(); var statement = connection.createStatement()) {
@@ -104,7 +106,7 @@ public class ModmailManager {
         modmailThreads.put(user.getIdLong(), threadID);
     }
 
-    public void sendModmailResponse(ThreadChannel threadChannel, String messageContent, List<Message.Attachment> attachments, Consumer<Boolean> success) {
+    public void sendModmailResponse(ThreadChannel threadChannel, String messageContent, List<Message.Attachment> attachments, Consumer<Boolean> success, Consumer<Void> disabledDMs) {
         var jda = threadChannel.getJDA();
 
         try {
@@ -114,7 +116,7 @@ public class ModmailManager {
 
             if (modmailEntry.isEmpty()) {
                 success.accept(false);
-                logger.error("Modmail entry empty");
+                logger.error("Modmail entry empty + " + threadChannel.getIdLong());
                 return;
             }
 
@@ -122,16 +124,25 @@ public class ModmailManager {
             jda.retrieveUserById(userID)
                     .flatMap(User::openPrivateChannel)
                     .queue(channel -> {
-                        channel.sendMessageEmbeds(EmbedUtils.buildEmbed("New Message from the Bocchicord Moderation Team", messageContent, Color.GREEN)).queue();
-
-                        databaseHandler.addModmailMessage(channel.getUser(), false, messageContent);
-
-                        if (attachments.isEmpty()) {
-                            success.accept(true);
-                        } else {
-                            AttachmentSender.sendAttachment(channel, attachments, success, v -> {
-                                threadChannel.sendMessageEmbeds(EmbedUtils.buildEmbed("Attachment bigger than 8 MB, upload failed", Color.RED)).queue();                            });
+                        if (blocklistManager.isBlocklisted(channel.getUser())) {
+                            threadChannel.sendMessageEmbeds(EmbedUtils.buildEmbed("Warning: User is on blocklist and can't reply", Color.YELLOW)).queue();
                         }
+
+                        channel.sendMessageEmbeds(EmbedUtils.buildEmbed("New Message from the Bocchicord Moderation Team", messageContent, Color.GREEN)).queue(messageSuccess -> {
+                            if (attachments.isEmpty()) {
+                                success.accept(true);
+                            } else {
+                                AttachmentSender.sendAttachment(channel, attachments, success, v -> {
+                                    threadChannel.sendMessageEmbeds(EmbedUtils.buildEmbed("Attachment bigger than 8 MB, upload failed", Color.RED)).queue();
+                                });
+                            }
+
+                            databaseHandler.addModmailMessage(channel.getUser(), false, messageContent);
+                        }, throwable -> {
+                            logger.warn("User has DMs closed");
+                            disabledDMs.accept(null);
+                            success.accept(false);
+                        });
                     });
         } catch (Exception exception) {
             logger.error("Exception occurred", exception);

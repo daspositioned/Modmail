@@ -36,6 +36,7 @@ public class DatabaseHandler {
         try (var connection = dataSource.getConnection(); var statement = connection.createStatement()) {
             statement.execute("CREATE TABLE IF NOT EXISTS modmail_threads (user_id BIGINT PRIMARY KEY, thread_id BIGINT)");
             statement.execute("CREATE TABLE IF NOT EXISTS modmail_messages (id SERIAL PRIMARY KEY, user_id BIGINT, user_message BOOLEAN, content TEXT, timestamp BIGINT)");
+            statement.execute("CREATE TABLE IF NOT EXISTS modmail_blocklist (user_id BIGINT PRIMARY KEY)");
         } catch (SQLException exception) {
             logger.error("Could not create tables", exception);
             System.exit(-1);
