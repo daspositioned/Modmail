@@ -4,6 +4,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 import net.dasunterstrich.modmail.database.DatabaseHandler;
 import net.dasunterstrich.modmail.listener.DirectMessageListener;
 import net.dasunterstrich.modmail.listener.SlashCommandListener;
+import net.dasunterstrich.modmail.listener.ThreadDeletionListener;
 import net.dasunterstrich.modmail.modmail.BlocklistManager;
 import net.dasunterstrich.modmail.modmail.ModmailManager;
 import net.dv8tion.jda.api.JDA;
@@ -33,7 +34,7 @@ public class Bot {
 
         JDA jda = JDABuilder.createDefault(readToken())
                 .setActivity(Activity.playing("with Bocchicord"))
-                .addEventListeners(new DirectMessageListener(modmailManager, blocklistManager, config), new SlashCommandListener(modmailManager, blocklistManager))
+                .addEventListeners(new DirectMessageListener(modmailManager, blocklistManager, config), new SlashCommandListener(modmailManager, blocklistManager), new ThreadDeletionListener(modmailManager))
                 .setMemberCachePolicy(MemberCachePolicy.ONLINE)
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
                 .build();

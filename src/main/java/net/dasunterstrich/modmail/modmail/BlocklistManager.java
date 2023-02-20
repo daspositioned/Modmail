@@ -34,7 +34,8 @@ public class BlocklistManager {
     }
 
     public boolean addUser(User user) {
-        blockedUsers.add(user.getIdLong());
+        var success = blockedUsers.add(user.getIdLong());
+        if (!success) return true;
 
         try (var connection = databaseHandler.getConnection()) {
             var statement = connection.prepareStatement("INSERT INTO modmail_blocklist (user_id) VALUES (?)");
@@ -50,7 +51,8 @@ public class BlocklistManager {
     }
 
     public boolean removeUser(User user) {
-        blockedUsers.remove(user.getIdLong());
+        var success = blockedUsers.remove(user.getIdLong());
+        if (!success) return true;
 
         try (var connection = databaseHandler.getConnection(); var statement = connection.createStatement()) {
             statement.execute("DELETE FROM modmail_blocklist WHERE user_id = " + user.getIdLong());

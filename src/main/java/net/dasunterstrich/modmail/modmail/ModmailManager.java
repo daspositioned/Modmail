@@ -85,6 +85,24 @@ public class ModmailManager {
         return modmailThreads.get(user.getIdLong());
     }
 
+    public void deleteModmailThread(ThreadChannel threadChannel) {
+        var threadID = threadChannel.getIdLong();
+        if (!modmailThreads.containsValue(threadID)) return;
+
+        var modmailEntry = modmailThreads.entrySet().stream().filter(entry -> entry.getValue() == threadID).findAny();
+        if (modmailEntry.isEmpty()) return;
+
+        var userID = modmailEntry.get().getKey();
+        try (var connection = databaseHandler.getConnection(); var statement = connection.createStatement()) {
+            statement.execute("DELETE FROM modmail_threads WHERE thread_id = " + threadID);
+            logger.info("Deleted thread " + threadChannel.getName());
+        } catch (SQLException exception) {
+            logger.error("Could not delete thread " + threadChannel.getName(), exception);
+        }
+
+        modmailThreads.remove(userID);
+    }
+
     private void createModmailThread(User user) throws SQLException {
         var jda = user.getJDA();
         var threadID = jda.getGuildById(config.get("GUILD_ID"))
