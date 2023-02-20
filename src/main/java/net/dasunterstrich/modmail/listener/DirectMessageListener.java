@@ -8,10 +8,13 @@ import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 
 public class DirectMessageListener extends ListenerAdapter {
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private final ModmailManager modmailManager;
     private final BlocklistManager blocklistManager;
     private final Dotenv config;
@@ -29,6 +32,7 @@ public class DirectMessageListener extends ListenerAdapter {
         if (event.isFromGuild() && !event.isWebhookMessage() && event.isFromThread()) {
             onGuildThreadMessage(event);
         } else if (!event.isFromGuild()) {
+            logger.info("Potential modmail from " + event.getAuthor().getAsTag());
             onPrivateMessage(event);
         }
     }
