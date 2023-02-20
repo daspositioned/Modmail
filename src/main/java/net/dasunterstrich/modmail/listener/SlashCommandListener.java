@@ -3,6 +3,7 @@ package net.dasunterstrich.modmail.listener;
 import net.dasunterstrich.modmail.modmail.BlocklistManager;
 import net.dasunterstrich.modmail.modmail.ModmailManager;
 import net.dasunterstrich.modmail.utils.EmbedUtils;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.utils.Result;
@@ -28,6 +29,8 @@ public class SlashCommandListener extends ListenerAdapter {
             modmail(event);
         } else if (event.getFullCommandName().startsWith("blocklist")) {
             blocklist(event);
+        } else if (event.getFullCommandName().equals("close")) {
+            close(event);
         }
     }
 
@@ -97,6 +100,17 @@ public class SlashCommandListener extends ListenerAdapter {
                     event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Internal error", Color.RED)).queue();
                 }
             }
+        }
+    }
+
+    private void close(SlashCommandInteractionEvent event) {
+        if (event.getChannelType() != ChannelType.GUILD_PUBLIC_THREAD) return;
+        if (modmailManager.isModmailThread(event.getChannel().asThreadChannel())) {
+            event.replyEmbeds(EmbedUtils.buildEmbed("Modmail closed", Color.GREEN)).queue(success -> {
+                event.getChannel().asThreadChannel().getManager().setArchived(true).queue();
+            });
+        } else {
+            event.replyEmbeds(EmbedUtils.buildEmbed("I cannot close threads which are not modmails", Color.RED)).setEphemeral(true).queue();
         }
     }
 }

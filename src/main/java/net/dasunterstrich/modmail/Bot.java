@@ -2,6 +2,7 @@ package net.dasunterstrich.modmail;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dasunterstrich.modmail.database.DatabaseHandler;
+import net.dasunterstrich.modmail.listener.ChannelUpdateArchivedListener;
 import net.dasunterstrich.modmail.listener.DirectMessageListener;
 import net.dasunterstrich.modmail.listener.SlashCommandListener;
 import net.dasunterstrich.modmail.listener.ThreadDeletionListener;
@@ -34,23 +35,29 @@ public class Bot {
 
         JDA jda = JDABuilder.createDefault(readToken())
                 .setActivity(Activity.playing("with Bocchicord"))
-                .addEventListeners(new DirectMessageListener(modmailManager, blocklistManager, config), new SlashCommandListener(modmailManager, blocklistManager), new ThreadDeletionListener(modmailManager))
+                .addEventListeners(
+                        new DirectMessageListener(modmailManager, blocklistManager, config),
+                        new SlashCommandListener(modmailManager, blocklistManager),
+                        new ThreadDeletionListener(modmailManager),
+                        new ChannelUpdateArchivedListener(modmailManager))
                 .setMemberCachePolicy(MemberCachePolicy.ONLINE)
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
                 .build();
 
         jda.updateCommands().addCommands(
-                Commands.slash("contactuser", "Opens a modmail thread for this user")
+                Commands.slash("contactuser", "Open a modmail thread for a user")
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS))
                         .addOption(OptionType.USER, "user", "The user to contact", true),
                 Commands.slash("modmail", "Send a modmail to the staff team")
                         .addOption(OptionType.STRING, "message", "The message to send", true),
+                Commands.slash("close", "Close a modmail thread")
+                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS)),
                 Commands.slash("blocklist", "Manage the modmail blocklist")
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS))
                         .addSubcommands(
                                 new SubcommandData("add", "Add a user to the blocklist")
                                         .addOption(OptionType.USER, "user", "The user to block", true),
-                                new SubcommandData("list", "Displays the current blocklist"),
+                                new SubcommandData("list", "Display the current blocklist"),
                                 new SubcommandData("remove", "Remove a user from the blocklist")
                                         .addOption(OptionType.USER, "user", "The user to unblock", true)
                         ))

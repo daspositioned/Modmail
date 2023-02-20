@@ -47,31 +47,20 @@ public class ModmailManager {
 
     public void sendModmailMessage(User user, String content, List<Message.Attachment> attachments, Consumer<Boolean> success) {
         var jda = user.getJDA();
+        var guild = jda.getGuildById(config.get("GUILD_ID"));
+        var forumChannel = guild.getForumChannelById(config.get("FORUM_ID"));
 
         try {
             var modmailThreadID = getModmailThread(user);
-            var modmailThread = jda.getGuildById(config.get("GUILD_ID")).getThreadChannelById(modmailThreadID);
-            if (modmailThread == null) throw new IllegalStateException();
+            var modmailThread = guild.getThreadChannelById(modmailThreadID);
 
-            if (!content.isEmpty()) {
-                modmailThread.sendMessageEmbeds(EmbedUtils.buildEmbed(content, Color.GREEN)).queue(message -> {
-                    var modmailNotificationChannel = modmailThread.getGuild().getTextChannelById(config.get("NOTIFICATION_CHANNEL_ID"));
-                    var embed = new EmbedBuilder()
-                            .setTitle("New Message from " + user.getAsTag(), DiscordUtils.getMessageLink(message))
-                            .setTimestamp(Instant.now())
-                            .build();
-                    modmailNotificationChannel.sendMessageEmbeds(embed).queue(null, failure -> success.accept(false));
-                }, failure -> success.accept(false));
-            }
-
-            databaseHandler.addModmailMessage(user, true, content);
-
-            if (attachments.isEmpty()) {
-                success.accept(true);
+            if (modmailThread == null) {
+                forumChannel.retrieveArchivedPublicThreadChannels().queue(retrievedChannels -> {
+                    var newThread = guild.getThreadChannelById(modmailThreadID);
+                    sendModmailMessage(user, newThread, content, attachments, success);
+                }, throwable -> success.accept(false));
             } else {
-                AttachmentSender.sendAttachment(modmailThread, attachments, success, v -> {
-                    modmailThread.sendMessageEmbeds(EmbedUtils.buildEmbed("User tried to send at least one big file, unable to process it", Color.RED)).queue();
-                });
+                sendModmailMessage(user, modmailThread, content, attachments, success);
             }
         } catch (Exception exception) {
             logger.error("Exception occurred", exception);
@@ -79,10 +68,42 @@ public class ModmailManager {
         }
     }
 
+    private void sendModmailMessage(User user, ThreadChannel modmailThread, String content, List<Message.Attachment> attachments, Consumer<Boolean> success) {
+        if (modmailThread == null) throw new IllegalStateException();
+
+        var openTag = modmailThread.getParentChannel().asForumChannel().getAvailableTagsByName("open", true);
+        modmailThread.getManager().setArchived(false).queue(s -> modmailThread.getManager().setAppliedTags(openTag).queue(null, throwable -> success.accept(false)));;
+
+        if (!content.isEmpty()) {
+            modmailThread.sendMessageEmbeds(EmbedUtils.buildEmbed(content, Color.GREEN)).queue(message -> {
+                var modmailNotificationChannel = modmailThread.getGuild().getTextChannelById(config.get("NOTIFICATION_CHANNEL_ID"));
+                var embed = new EmbedBuilder()
+                        .setTitle("New Message from " + user.getAsTag(), DiscordUtils.getMessageLink(message))
+                        .setTimestamp(Instant.now())
+                        .build();
+                modmailNotificationChannel.sendMessageEmbeds(embed).queue(null, failure -> success.accept(false));
+            }, failure -> success.accept(false));
+        }
+
+        databaseHandler.addModmailMessage(user, true, content);
+
+        if (attachments.isEmpty()) {
+            success.accept(true);
+        } else {
+            AttachmentSender.sendAttachment(modmailThread, attachments, success, v -> {
+                modmailThread.sendMessageEmbeds(EmbedUtils.buildEmbed("User tried to send at least one big file, unable to process it", Color.RED)).queue();
+            });
+        }
+    }
+
     public long getModmailThread(User user) throws SQLException {
         if (!modmailThreads.containsKey(user.getIdLong())) createModmailThread(user);
 
         return modmailThreads.get(user.getIdLong());
+    }
+
+    public boolean isModmailThread(ThreadChannel threadChannel) {
+        return modmailThreads.containsValue(threadChannel.getIdLong());
     }
 
     public void deleteModmailThread(ThreadChannel threadChannel) {
@@ -126,6 +147,9 @@ public class ModmailManager {
 
     public void sendModmailResponse(ThreadChannel threadChannel, String messageContent, List<Message.Attachment> attachments, Consumer<Boolean> success, Consumer<Void> disabledDMs) {
         var jda = threadChannel.getJDA();
+
+        var openTag = threadChannel.getParentChannel().asForumChannel().getAvailableTagsByName("open", true);
+        threadChannel.getManager().setAppliedTags(openTag).queue();
 
         try {
             var modmailEntry = modmailThreads.entrySet().stream()
