@@ -1,7 +1,6 @@
 package net.dasunterstrich.modmail.listener;
 
 import io.github.cdimascio.dotenv.Dotenv;
-import net.dasunterstrich.modmail.database.DatabaseHandler;
 import net.dasunterstrich.modmail.modmail.BlocklistManager;
 import net.dasunterstrich.modmail.modmail.ModmailManager;
 import net.dasunterstrich.modmail.utils.EmbedUtils;
