@@ -24,3 +24,9 @@ dependencies {
 application {
     mainClass.set("net.dasunterstrich.modmail.Main")
 }
+
+tasks {
+    compileJava {
+        options.encoding = "UTF-8"
+    }
+}
