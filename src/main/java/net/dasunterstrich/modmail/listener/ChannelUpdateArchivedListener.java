@@ -8,7 +8,7 @@ import net.dv8tion.jda.api.events.channel.update.ChannelUpdateArchivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 public class ChannelUpdateArchivedListener extends ListenerAdapter {
-    private final CooldownManager<Long> cooldownManager = new CooldownManager<>(4000);
+    private final CooldownManager<Long> cooldownManager = new CooldownManager<>(3000);
     private final ModmailManager modmailManager;
 
     public ChannelUpdateArchivedListener(ModmailManager modmailManager) {
