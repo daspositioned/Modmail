@@ -48,8 +48,6 @@ public class Bot {
                 Commands.slash("contactuser", "Open a modmail thread for a user")
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS))
                         .addOption(OptionType.USER, "user", "The user to contact", true),
-                Commands.slash("modmail", "Send a modmail to the staff team")
-                        .addOption(OptionType.STRING, "message", "The message to send", true),
                 Commands.slash("close", "Close a modmail thread")
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS)),
                 Commands.slash("blocklist", "Manage the modmail blocklist")

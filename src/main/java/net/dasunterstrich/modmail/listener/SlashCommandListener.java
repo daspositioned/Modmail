@@ -9,7 +9,6 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.utils.Result;
 
 import java.awt.*;
-import java.util.Collections;
 import java.util.concurrent.Executors;
 
 public class SlashCommandListener extends ListenerAdapter {
@@ -25,8 +24,6 @@ public class SlashCommandListener extends ListenerAdapter {
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         if (event.getFullCommandName().equals("contactuser")) {
             contactUser(event);
-        } else if (event.getFullCommandName().equals("modmail")) {
-            modmail(event);
         } else if (event.getFullCommandName().startsWith("blocklist")) {
             blocklist(event);
         } else if (event.getFullCommandName().equals("close")) {
@@ -43,23 +40,6 @@ public class SlashCommandListener extends ListenerAdapter {
         } catch (Exception exception) {
             event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Failed to create thread", Color.RED)).queue();
         }
-    }
-
-    private void modmail(SlashCommandInteractionEvent event) {
-        event.deferReply(true).queue();
-
-        if (blocklistManager.isBlocklisted(event.getUser())) {
-            event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("You are blocked from submitting new modmails", Color.RED)).queue();
-            return;
-        }
-
-        modmailManager.sendModmailMessage(event.getUser(), event.getOption("message").getAsString(), Collections.emptyList(), success -> {
-            if (success) {
-                event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Message sent successfully!", Color.GREEN)).queue();
-            } else {
-                event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Failed to create modmail, try again later!", Color.RED)).queue();
-            }
-        });
     }
 
     private void blocklist(SlashCommandInteractionEvent event) {
