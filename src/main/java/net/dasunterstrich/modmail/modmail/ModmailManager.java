@@ -81,7 +81,7 @@ public class ModmailManager {
         modmailThread.getManager().setArchived(false).queue(s -> modmailThread.getManager().setAppliedTags(openTag).queue(null, throwable -> success.accept(false)));;
 
         if (!content.isEmpty()) {
-            modmailThread.sendMessageEmbeds(EmbedUtils.buildEmbed(content, Color.GREEN)).queue(message -> {
+            modmailThread.sendMessageEmbeds(EmbedUtils.buildEmbed(content, Color.PINK)).queue(message -> {
                 var modmailNotificationChannel = modmailThread.getGuild().getTextChannelById(config.get("NOTIFICATION_CHANNEL_ID"));
                 var embed = new EmbedBuilder()
                         .setTitle("New Message from " + user.getAsTag(), DiscordUtils.getMessageLink(message))
@@ -176,7 +176,7 @@ public class ModmailManager {
                             threadChannel.sendMessageEmbeds(EmbedUtils.buildEmbed("Warning: User is on blocklist and can't reply", Color.YELLOW)).queue();
                         }
 
-                        channel.sendMessageEmbeds(EmbedUtils.buildEmbed("New Message from the Bocchicord Moderation Team", messageContent, Color.GREEN)).queue(messageSuccess -> {
+                        channel.sendMessageEmbeds(EmbedUtils.buildEmbed("New Message from the Bocchicord Moderation Team", messageContent, Color.PINK)).queue(messageSuccess -> {
                             if (attachments.isEmpty()) {
                                 success.accept(true);
                             } else {

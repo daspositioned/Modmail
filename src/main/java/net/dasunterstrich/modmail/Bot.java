@@ -37,7 +37,7 @@ public class Bot {
                 .setActivity(Activity.playing("with Bocchicord"))
                 .addEventListeners(
                         new DirectMessageListener(modmailManager, blocklistManager, config),
-                        new SlashCommandListener(modmailManager, blocklistManager),
+                        new SlashCommandListener(modmailManager, blocklistManager, config),
                         new ThreadDeletionListener(modmailManager),
                         new ChannelUpdateArchivedListener(modmailManager))
                 .setMemberCachePolicy(MemberCachePolicy.ONLINE)

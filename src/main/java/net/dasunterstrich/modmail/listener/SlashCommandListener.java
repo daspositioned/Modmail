@@ -1,9 +1,11 @@
 package net.dasunterstrich.modmail.listener;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import net.dasunterstrich.modmail.modmail.BlocklistManager;
 import net.dasunterstrich.modmail.modmail.ModmailManager;
 import net.dasunterstrich.modmail.utils.EmbedUtils;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.utils.Result;
@@ -14,10 +16,12 @@ import java.util.concurrent.Executors;
 public class SlashCommandListener extends ListenerAdapter {
     private final ModmailManager modmailManager;
     private final BlocklistManager blocklistManager;
+    private final Dotenv config;
 
-    public SlashCommandListener(ModmailManager modmailManager, BlocklistManager blocklistManager) {
+    public SlashCommandListener(ModmailManager modmailManager, BlocklistManager blocklistManager, Dotenv config) {
         this.modmailManager = modmailManager;
         this.blocklistManager = blocklistManager;
+        this.config = config;
     }
 
     @Override
@@ -35,11 +39,35 @@ public class SlashCommandListener extends ListenerAdapter {
         event.deferReply().queue();
 
         try {
+            var guild = event.getGuild();
             var threadID = modmailManager.getModmailThread(event.getOption("user").getAsUser());
-            event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Modmail thread: \n<#" + threadID + ">", Color.GREEN)).queue();
+            var forumChannel = guild.getForumChannelById(config.get("FORUM_ID"));
+            var modmailThread = event.getGuild().getThreadChannelById(threadID);
+
+            if (modmailThread == null) {
+                forumChannel.retrieveArchivedPublicThreadChannels().queue(retrievedChannels -> {
+                    var newThread = guild.getThreadChannelById(threadID);
+                    if (newThread == null) {
+                        throw new IllegalStateException("Failed to reuse thread " + threadID);
+                    }
+
+                    sendModmailThreadMessage(event, newThread);
+                });
+            } else {
+                sendModmailThreadMessage(event, modmailThread);
+            }
         } catch (Exception exception) {
             event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Failed to create thread", Color.RED)).queue();
+            exception.printStackTrace();
         }
+    }
+
+    private void sendModmailThreadMessage(SlashCommandInteractionEvent event, ThreadChannel threadChannel) {
+        threadChannel.getManager().setArchived(false).queue(success -> {
+            threadChannel.sendMessage(event.getUser().getAsMention()).queue(message -> {
+                event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Modmail thread: \n<#" + threadChannel.getId() + ">", Color.PINK)).queue();
+            });
+        });
     }
 
     private void blocklist(SlashCommandInteractionEvent event) {
@@ -50,7 +78,7 @@ public class SlashCommandListener extends ListenerAdapter {
                 var user = event.getOption("user").getAsUser();
                 var success = blocklistManager.addUser(user);
                 if (success) {
-                    event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Blocked user " + user.getAsTag(), Color.GREEN)).queue();
+                    event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Blocked user " + user.getAsTag(), Color.PINK)).queue();
                 } else {
                     event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Internal error", Color.RED)).queue();
                 }
@@ -65,9 +93,9 @@ public class SlashCommandListener extends ListenerAdapter {
                             .toList();
 
                     if (blockedUsers.isEmpty()) {
-                        event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("There are no users on the blocklist", Color.GREEN)).queue();
+                        event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("There are no users on the blocklist", Color.PINK)).queue();
                     } else {
-                        event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Blocklist", String.join("\n", blockedUsers), Color.GREEN)).queue();
+                        event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Blocklist", String.join("\n", blockedUsers), Color.PINK)).queue();
                     }
                 });
             }
@@ -75,7 +103,7 @@ public class SlashCommandListener extends ListenerAdapter {
                 var user = event.getOption("user").getAsUser();
                 var success = blocklistManager.removeUser(user);
                 if (success) {
-                    event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Unblocked user " + user.getAsTag(), Color.GREEN)).queue();
+                    event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Unblocked user " + user.getAsTag(), Color.PINK)).queue();
                 } else {
                     event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Internal error", Color.RED)).queue();
                 }
@@ -88,7 +116,7 @@ public class SlashCommandListener extends ListenerAdapter {
 
         if (event.getChannelType() != ChannelType.GUILD_PUBLIC_THREAD) return;
         if (modmailManager.isModmailThread(threadChannel)) {
-            event.replyEmbeds(EmbedUtils.buildEmbed("Modmail closed", Color.GREEN)).queue(success -> {
+            event.replyEmbeds(EmbedUtils.buildEmbed("Modmail closed", Color.PINK)).queue(success -> {
                 var tag = threadChannel.getParentChannel().asForumChannel().getAvailableTagsByName("closed", true).get(0);
                 threadChannel.getManager().setAppliedTags(tag).queue(s -> event.getChannel().asThreadChannel().getManager().setArchived(true).queue());
             });
