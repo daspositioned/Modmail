@@ -86,6 +86,7 @@ public class ModmailManager {
                 var embed = new EmbedBuilder()
                         .setTitle("New Message from " + user.getAsTag(), DiscordUtils.getMessageLink(message))
                         .setTimestamp(Instant.now())
+                        .setColor(Color.PINK)
                         .build();
                 modmailNotificationChannel.sendMessageEmbeds(embed).queue(null, failure -> success.accept(false));
             }, failure -> success.accept(false));
