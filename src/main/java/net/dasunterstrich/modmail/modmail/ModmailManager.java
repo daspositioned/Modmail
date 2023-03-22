@@ -104,9 +104,13 @@ public class ModmailManager {
     }
 
     public long getModmailThread(User user) throws SQLException {
-        if (!modmailThreads.containsKey(user.getIdLong())) createModmailThread(user);
+        if (!hasModmailThread(user)) createModmailThread(user);
 
         return modmailThreads.get(user.getIdLong());
+    }
+
+    public boolean hasModmailThread(User user) {
+        return modmailThreads.containsKey(user.getIdLong());
     }
 
     public boolean isModmailThread(ThreadChannel threadChannel) {

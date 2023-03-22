@@ -2,10 +2,7 @@ package net.dasunterstrich.modmail;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dasunterstrich.modmail.database.DatabaseHandler;
-import net.dasunterstrich.modmail.listener.ChannelUpdateArchivedListener;
-import net.dasunterstrich.modmail.listener.DirectMessageListener;
-import net.dasunterstrich.modmail.listener.SlashCommandListener;
-import net.dasunterstrich.modmail.listener.ThreadDeletionListener;
+import net.dasunterstrich.modmail.listener.*;
 import net.dasunterstrich.modmail.modmail.BlocklistManager;
 import net.dasunterstrich.modmail.modmail.ModmailManager;
 import net.dv8tion.jda.api.JDA;
@@ -39,9 +36,10 @@ public class Bot {
                         new DirectMessageListener(modmailManager, blocklistManager, config),
                         new SlashCommandListener(modmailManager, blocklistManager, config),
                         new ThreadDeletionListener(modmailManager),
-                        new ChannelUpdateArchivedListener(modmailManager))
+                        new ChannelUpdateArchivedListener(modmailManager),
+                        new UserTypingListener(modmailManager))
                 .setMemberCachePolicy(MemberCachePolicy.ONLINE)
-                .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.MESSAGE_CONTENT)
+                .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.DIRECT_MESSAGE_TYPING)
                 .build();
 
         jda.updateCommands().addCommands(
