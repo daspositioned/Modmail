@@ -105,7 +105,9 @@ public class ModmailManager {
         }
 
         if (!modmailThread.getName().equals(getForumTitle(user))) {
+            var oldName = modmailThread.getName();
             modmailThread.getManager().setName(getForumTitle(user)).queue();
+            modmailThread.sendMessageEmbeds(EmbedUtils.buildEmbed("User changed username", "Old name: " + oldName, Color.LIGHT_GRAY)).queue();
         }
     }
 
