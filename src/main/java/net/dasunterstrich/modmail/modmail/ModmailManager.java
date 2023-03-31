@@ -97,9 +97,15 @@ public class ModmailManager {
         if (attachments.isEmpty()) {
             success.accept(true);
         } else {
-            AttachmentSender.sendAttachment(modmailThread, attachments, success, v -> {
-                modmailThread.sendMessageEmbeds(EmbedUtils.buildEmbed("User tried to send at least one big file, unable to process it", Color.RED)).queue();
+            AttachmentSender.sendAttachment(modmailThread, attachments, success, error -> {
+                modmailThread.sendMessageEmbeds(EmbedUtils.buildEmbed("User tried to send at least one big file, unable to process it", Color.RED)).queue(secondSuccess -> {
+                    success.accept(true);
+                }, failure -> success.accept(false));
             });
+        }
+
+        if (!modmailThread.getName().equals(getForumTitle(user))) {
+            modmailThread.getManager().setName(getForumTitle(user)).queue();
         }
     }
 
@@ -139,7 +145,7 @@ public class ModmailManager {
         var jda = user.getJDA();
         var threadID = jda.getGuildById(config.get("GUILD_ID"))
                 .getForumChannelById(config.get("FORUM_ID"))
-                .createForumPost(user.getAsTag() + " (" + user.getId() + ")", MessageCreateData.fromContent("New modmail"))
+                .createForumPost(getForumTitle(user), MessageCreateData.fromContent("New modmail"))
                 .complete()
                 .getThreadChannel()
                 .getIdLong();
@@ -154,6 +160,10 @@ public class ModmailManager {
         }
 
         modmailThreads.put(user.getIdLong(), threadID);
+    }
+
+    private String getForumTitle(User user) {
+        return user.getAsTag() + " (" + user.getId() + ")";
     }
 
     public void sendModmailResponse(ThreadChannel threadChannel, String messageContent, List<Message.Attachment> attachments, Consumer<Boolean> success, Consumer<Void> disabledDMs) {
