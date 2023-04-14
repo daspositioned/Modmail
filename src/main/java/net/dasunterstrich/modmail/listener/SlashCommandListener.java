@@ -112,16 +112,21 @@ public class SlashCommandListener extends ListenerAdapter {
     }
 
     private void close(SlashCommandInteractionEvent event) {
-        var threadChannel = event.getChannel().asThreadChannel();
+        event.deferReply().queue();
 
-        if (event.getChannelType() != ChannelType.GUILD_PUBLIC_THREAD) return;
+        if (event.getChannelType() != ChannelType.GUILD_PUBLIC_THREAD) {
+            event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Invalid channel", Color.RED)).queue();
+            return;
+        }
+
+        var threadChannel = event.getChannel().asThreadChannel();
         if (modmailManager.isModmailThread(threadChannel)) {
-            event.replyEmbeds(EmbedUtils.buildEmbed("Modmail closed", Color.PINK)).queue(success -> {
+            event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Modmail closed", Color.PINK)).queue(success -> {
                 var tag = threadChannel.getParentChannel().asForumChannel().getAvailableTagsByName("closed", true).get(0);
                 threadChannel.getManager().setAppliedTags(tag).queue(s -> event.getChannel().asThreadChannel().getManager().setArchived(true).queue());
             });
         } else {
-            event.replyEmbeds(EmbedUtils.buildEmbed("I cannot close threads which are not modmails", Color.RED)).setEphemeral(true).queue();
+            event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("I cannot close threads which are not modmails", Color.RED)).queue();
         }
     }
 }
