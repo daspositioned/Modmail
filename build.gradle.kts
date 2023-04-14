@@ -13,10 +13,10 @@ repositories {
 dependencies {
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9")
-    implementation("ch.qos.logback:logback-classic:1.4.5")
+    implementation("ch.qos.logback:logback-classic:1.4.6")
     implementation("io.github.cdimascio:dotenv-java:2.3.2")
 
-    implementation("net.dv8tion:JDA:5.0.0-beta.4") {
+    implementation("net.dv8tion:JDA:5.0.0-beta.8") {
         exclude("opus-java")
     }
 }
