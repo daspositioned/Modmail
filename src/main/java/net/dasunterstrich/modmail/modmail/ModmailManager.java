@@ -55,12 +55,20 @@ public class ModmailManager {
             var modmailThread = guild.getThreadChannelById(modmailThreadID);
 
             if (modmailThread == null) {
-                forumChannel.retrieveArchivedPublicThreadChannels().queue(retrievedChannels -> {
+                forumChannel.retrieveArchivedPublicThreadChannels().queue(retrievedThreads -> {
                     var newThread = guild.getThreadChannelById(modmailThreadID);
                     if (newThread == null) {
-                        success.accept(false);
-                        logger.error("Failed to reuse thread");
-                        return;
+                        var retrievedThread = retrievedThreads.stream()
+                                .filter(thread -> thread.getIdLong() == modmailThreadID)
+                                .findAny();
+
+                        if (retrievedThread.isEmpty()) {
+                            success.accept(false);
+                            logger.error("Failed to reuse thread");
+                            return;
+                        }
+
+                        newThread = retrievedThread.get();
                     }
 
                     sendModmailMessage(user, newThread, content, attachments, success);
