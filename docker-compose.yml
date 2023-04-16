@@ -8,3 +8,4 @@ services:
     volumes:
       - ${PWD}/.env:/app/.env
       - ${PWD}/token.txt:/app/token.txt
+      - ${PWD}/logs/:/app/logs/
