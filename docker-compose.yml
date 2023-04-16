@@ -1,0 +1,10 @@
+version: '3.7'
+
+services:
+  bot:
+    image: seliba/modmail-bot:latest
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ${PWD}/.env:/app/.env
+      - ${PWD}/token.txt:/app/token.txt
