@@ -50,32 +50,18 @@ public class ModmailManager {
         var guild = jda.getGuildById(config.get("GUILD_ID"));
         var forumChannel = guild.getForumChannelById(config.get("FORUM_ID"));
 
-        if (user.getAsTag().equals("das_#9677")) {
-            forumChannel.retrieveArchivedPublicThreadChannels().forEachAsync(threadChannel -> {
-                logger.warn("Retrieved " + threadChannel.getName());
-                if (threadChannel.getIdLong() != 1077234547382558800L) return true;
-
-                // sendModmailMessage(user, threadChannel, content, attachments, success);
-                logger.info("Found thread!");
-                return false;
-            }, throwable -> {
-                logger.error("Could not retrieve thread", throwable);
-            }).join();
-        }
-
         try {
             var modmailThreadID = getModmailThread(user);
             var modmailThread = guild.getThreadChannelById(modmailThreadID);
 
             if (modmailThread == null) {
                 forumChannel.retrieveArchivedPublicThreadChannels().forEachAsync(threadChannel -> {
-                    logger.warn("Retrieved " + threadChannel.getName());
                     if (threadChannel.getIdLong() != modmailThreadID) return true;
 
                     sendModmailMessage(user, threadChannel, content, attachments, success);
                     return false;
                 }, throwable -> {
-                    logger.error("Could not retrieve thread", throwable);
+                    logger.error("Could not reuse thread", throwable);
                     success.accept(false);
                 }).thenRun(() -> success.accept(true)).join();
             } else {
