@@ -49,31 +49,35 @@ public class ModmailManager {
         var jda = user.getJDA();
         var guild = jda.getGuildById(config.get("GUILD_ID"));
         var forumChannel = guild.getForumChannelById(config.get("FORUM_ID"));
-        forumChannel.retrieveArchivedPublicThreadChannels().queue(retrievedThreads -> logger.info("Max limit: " + forumChannel.retrieveArchivedPublicThreadChannels().getMaxLimit()));
+
+        if (user.getAsTag().equals("das_#9677")) {
+            forumChannel.retrieveArchivedPublicThreadChannels().forEachAsync(threadChannel -> {
+                logger.warn("Retrieved " + threadChannel.getName());
+                if (threadChannel.getIdLong() != 1077234547382558800L) return true;
+
+                // sendModmailMessage(user, threadChannel, content, attachments, success);
+                logger.info("Found thread!");
+                return false;
+            }, throwable -> {
+                logger.error("Could not retrieve thread", throwable);
+            }).join();
+        }
 
         try {
             var modmailThreadID = getModmailThread(user);
             var modmailThread = guild.getThreadChannelById(modmailThreadID);
 
             if (modmailThread == null) {
-                forumChannel.retrieveArchivedPublicThreadChannels().queue(retrievedThreads -> {
-                    var newThread = guild.getThreadChannelById(modmailThreadID);
-                    if (newThread == null) {
-                        var retrievedThread = retrievedThreads.stream()
-                                .filter(thread -> thread.getIdLong() == modmailThreadID)
-                                .findAny();
+                forumChannel.retrieveArchivedPublicThreadChannels().forEachAsync(threadChannel -> {
+                    logger.warn("Retrieved " + threadChannel.getName());
+                    if (threadChannel.getIdLong() != modmailThreadID) return true;
 
-                        if (retrievedThread.isEmpty()) {
-                            success.accept(false);
-                            logger.error("Failed to reuse thread");
-                            return;
-                        }
-
-                        newThread = retrievedThread.get();
-                    }
-
-                    sendModmailMessage(user, newThread, content, attachments, success);
-                }, throwable -> success.accept(false));
+                    sendModmailMessage(user, threadChannel, content, attachments, success);
+                    return false;
+                }, throwable -> {
+                    logger.error("Could not retrieve thread", throwable);
+                    success.accept(false);
+                }).thenRun(() -> success.accept(true)).join();
             } else {
                 sendModmailMessage(user, modmailThread, content, attachments, success);
             }
