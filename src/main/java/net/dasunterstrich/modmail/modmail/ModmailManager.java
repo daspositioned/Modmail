@@ -49,6 +49,7 @@ public class ModmailManager {
         var jda = user.getJDA();
         var guild = jda.getGuildById(config.get("GUILD_ID"));
         var forumChannel = guild.getForumChannelById(config.get("FORUM_ID"));
+        forumChannel.retrieveArchivedPublicThreadChannels().queue(retrievedThreads -> logger.info("Retrieved " + retrievedThreads.size()));
 
         try {
             var modmailThreadID = getModmailThread(user);
