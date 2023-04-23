@@ -63,7 +63,7 @@ public class ModmailManager {
                 }, throwable -> {
                     logger.error("Could not reuse thread", throwable);
                     success.accept(false);
-                }).thenRun(() -> success.accept(true)).join();
+                }).join();
             } else {
                 sendModmailMessage(user, modmailThread, content, attachments, success);
             }
