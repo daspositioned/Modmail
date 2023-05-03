@@ -13,15 +13,16 @@ public class DatabaseHandler {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private HikariDataSource dataSource;
 
-    public void initializeDatabase(String jdbcUrl, String username, String password) {
-        initializeConnectionPool(username, password, jdbcUrl);
+    public void initializeDatabase(String address, String database, String username, String password) {
+        initializeConnectionPool(username, password, address, database);
         initializeTables();
     }
 
-    private void initializeConnectionPool(String jdbcUrl, String username, String password) {
+    private void initializeConnectionPool(String address, String database, String username, String password) {
         dataSource = new HikariDataSource();
-        dataSource.setJdbcUrl(jdbcUrl);
         dataSource.setDataSourceClassName("com.impossibl.postgres.jdbc.PGDataSource");
+        dataSource.addDataSourceProperty("serverName", address);
+        dataSource.addDataSourceProperty("databaseName", database);
         dataSource.setUsername(username);
         dataSource.setPassword(password);
         dataSource.setMinimumIdle(2);

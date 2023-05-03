@@ -72,7 +72,7 @@ public class Bot {
 
     private DatabaseHandler initializeDatabase(Dotenv config) {
         var databaseHandler = new DatabaseHandler();
-        databaseHandler.initializeDatabase(config.get("POSTGRES_JDBC_URL"), config.get("POSTGRES_USER"), config.get("POSTGRES_PASSWORD"));
+        databaseHandler.initializeDatabase(config.get("POSTGRES_ADDRESS"), config.get("POSTGRES_DATABASE"), config.get("POSTGRES_USER"), config.get("POSTGRES_PASSWORD"));
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             databaseHandler.closeDataSource();
