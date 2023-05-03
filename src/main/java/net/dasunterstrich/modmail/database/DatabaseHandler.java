@@ -14,7 +14,7 @@ public class DatabaseHandler {
     private HikariDataSource dataSource;
 
     public void initializeDatabase(String address, String database, String username, String password) {
-        initializeConnectionPool(username, password, address, database);
+        initializeConnectionPool(address, database, username, password);
         initializeTables();
     }
 
