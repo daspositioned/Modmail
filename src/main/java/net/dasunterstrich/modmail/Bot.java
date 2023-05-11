@@ -44,11 +44,14 @@ public class Bot {
 
         jda.updateCommands().addCommands(
                 Commands.slash("contactuser", "Open a modmail thread for a user")
+                        .setGuildOnly(true)
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS))
                         .addOption(OptionType.USER, "user", "The user to contact", true),
                 Commands.slash("close", "Close a modmail thread")
+                        .setGuildOnly(true)
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS)),
                 Commands.slash("blocklist", "Manage the modmail blocklist")
+                        .setGuildOnly(true)
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS))
                         .addSubcommands(
                                 new SubcommandData("add", "Add a user to the blocklist")
@@ -58,6 +61,7 @@ public class Bot {
                                         .addOption(OptionType.USER, "user", "The user to unblock", true)
                         ))
                 .queue();
+
         logger.info("Commands initialized");
     }
 

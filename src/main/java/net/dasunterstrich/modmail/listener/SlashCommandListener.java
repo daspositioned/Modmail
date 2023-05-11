@@ -26,6 +26,10 @@ public class SlashCommandListener extends ListenerAdapter {
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
+        if (event.getGuild() == null || !event.getGuild().getId().equals(config.get("GUILD_ID"))) {
+            return;
+        }
+
         if (event.getFullCommandName().equals("contactuser")) {
             contactUser(event);
         } else if (event.getFullCommandName().startsWith("blocklist")) {
