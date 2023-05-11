@@ -42,22 +42,7 @@ public class Bot {
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.DIRECT_MESSAGE_TYPING)
                 .build();
 
-        jda.updateCommands().addCommands(
-                Commands.slash("contactuser", "Open a modmail thread for a user")
-                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS))
-                        .addOption(OptionType.USER, "user", "The user to contact", true),
-                Commands.slash("close", "Close a modmail thread")
-                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS)),
-                Commands.slash("blocklist", "Manage the modmail blocklist")
-                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS))
-                        .addSubcommands(
-                                new SubcommandData("add", "Add a user to the blocklist")
-                                        .addOption(OptionType.USER, "user", "The user to block", true),
-                                new SubcommandData("list", "Display the current blocklist"),
-                                new SubcommandData("remove", "Remove a user from the blocklist")
-                                        .addOption(OptionType.USER, "user", "The user to unblock", true)
-                        ))
-                .queue();
+        jda.updateCommands().queue();
         logger.info("Commands initialized");
     }
 
