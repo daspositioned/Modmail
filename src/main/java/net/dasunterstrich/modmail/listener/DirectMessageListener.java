@@ -44,7 +44,7 @@ public class DirectMessageListener extends ListenerAdapter {
         var messageContent = event.getMessage().getContentRaw();
         if (!messageContent.startsWith("!")) return;
         messageContent = messageContent.substring(1);
-        if (messageContent.isBlank()) return;
+        if (messageContent.isBlank() && event.getMessage().getAttachments().isEmpty()) return;
 
         modmailManager.sendModmailResponse(threadChannel, messageContent, event.getMessage().getAttachments(), success -> {
             if (success) {
