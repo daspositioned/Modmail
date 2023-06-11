@@ -49,14 +49,13 @@ public class SlashCommandListener extends ListenerAdapter {
             var modmailThread = event.getGuild().getThreadChannelById(threadID);
 
             if (modmailThread == null) {
-                forumChannel.retrieveArchivedPublicThreadChannels().queue(retrievedChannels -> {
-                    var newThread = guild.getThreadChannelById(threadID);
-                    if (newThread == null) {
-                        event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Failed to reuse thread, this should not happen", Color.RED)).queue();
-                        throw new IllegalStateException("Failed to reuse thread " + threadID);
+                forumChannel.retrieveArchivedPublicThreadChannels().forEachAsync(threadChannel -> {
+                    if (threadChannel.getIdLong() != threadID) {
+                        return true;
                     }
 
-                    sendModmailThreadMessage(event, newThread);
+                    sendModmailThreadMessage(event, threadChannel);
+                    return false;
                 });
             } else {
                 sendModmailThreadMessage(event, modmailThread);
