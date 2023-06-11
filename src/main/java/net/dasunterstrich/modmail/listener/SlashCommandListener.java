@@ -52,6 +52,7 @@ public class SlashCommandListener extends ListenerAdapter {
                 forumChannel.retrieveArchivedPublicThreadChannels().queue(retrievedChannels -> {
                     var newThread = guild.getThreadChannelById(threadID);
                     if (newThread == null) {
+                        event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Failed to reuse thread, this should not happen", Color.RED)).queue();
                         throw new IllegalStateException("Failed to reuse thread " + threadID);
                     }
 
