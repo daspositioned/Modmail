@@ -4,6 +4,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 import net.dasunterstrich.modmail.modmail.BlocklistManager;
 import net.dasunterstrich.modmail.modmail.ModmailManager;
 import net.dasunterstrich.modmail.utils.EmbedUtils;
+import net.dasunterstrich.modmail.utils.UsernameUtils;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -32,7 +33,7 @@ public class DirectMessageListener extends ListenerAdapter {
         if (event.isFromGuild() && !event.isWebhookMessage() && event.isFromThread()) {
             onGuildThreadMessage(event);
         } else if (!event.isFromGuild()) {
-            logger.info("Potential modmail from " + event.getAuthor().getAsTag());
+            logger.info("Potential modmail from " + UsernameUtils.getUsername(event.getAuthor()));
             onPrivateMessage(event);
         }
     }

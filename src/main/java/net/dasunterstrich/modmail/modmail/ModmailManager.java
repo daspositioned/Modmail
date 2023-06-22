@@ -5,6 +5,7 @@ import net.dasunterstrich.modmail.database.DatabaseHandler;
 import net.dasunterstrich.modmail.utils.AttachmentSender;
 import net.dasunterstrich.modmail.utils.DiscordUtils;
 import net.dasunterstrich.modmail.utils.EmbedUtils;
+import net.dasunterstrich.modmail.utils.UsernameUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
@@ -83,7 +84,7 @@ public class ModmailManager {
             modmailThread.sendMessageEmbeds(EmbedUtils.buildEmbed(content, Color.PINK)).queue(message -> {
                 var modmailNotificationChannel = modmailThread.getGuild().getTextChannelById(config.get("NOTIFICATION_CHANNEL_ID"));
                 var embed = new EmbedBuilder()
-                        .setTitle("New Message from " + user.getAsTag(), DiscordUtils.getMessageLink(message))
+                        .setTitle("New Message from " + UsernameUtils.getUsername(user), DiscordUtils.getMessageLink(message))
                         .setTimestamp(Instant.now())
                         .setColor(Color.PINK)
                         .build();
@@ -164,7 +165,7 @@ public class ModmailManager {
     }
 
     private String getForumTitle(User user) {
-        return user.getAsTag() + " (" + user.getId() + ")";
+        return UsernameUtils.getUsername(user) + " (" + user.getId() + ")";
     }
 
     public void sendModmailResponse(ThreadChannel threadChannel, String messageContent, List<Message.Attachment> attachments, Consumer<Boolean> success, Consumer<Void> disabledDMs) {

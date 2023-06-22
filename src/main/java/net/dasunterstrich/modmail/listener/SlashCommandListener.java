@@ -4,6 +4,7 @@ import io.github.cdimascio.dotenv.Dotenv;
 import net.dasunterstrich.modmail.modmail.BlocklistManager;
 import net.dasunterstrich.modmail.modmail.ModmailManager;
 import net.dasunterstrich.modmail.utils.EmbedUtils;
+import net.dasunterstrich.modmail.utils.UsernameUtils;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -82,7 +83,7 @@ public class SlashCommandListener extends ListenerAdapter {
                 var user = event.getOption("user").getAsUser();
                 var success = blocklistManager.addUser(user);
                 if (success) {
-                    event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Blocked user " + user.getAsTag(), Color.PINK)).queue();
+                    event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Blocked user " + UsernameUtils.getUsername(user), Color.PINK)).queue();
                 } else {
                     event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Internal error", Color.RED)).queue();
                 }
@@ -93,7 +94,7 @@ public class SlashCommandListener extends ListenerAdapter {
                             .map(userID -> event.getJDA().retrieveUserById(userID).mapToResult().complete())
                             .filter(result -> !result.isFailure())
                             .map(Result::get)
-                            .map(user -> user.getAsTag() + " (" + user.getId() + ")")
+                            .map(user -> UsernameUtils.getUsername(user) + " (" + user.getId() + ")")
                             .toList();
 
                     if (blockedUsers.isEmpty()) {
@@ -107,7 +108,7 @@ public class SlashCommandListener extends ListenerAdapter {
                 var user = event.getOption("user").getAsUser();
                 var success = blocklistManager.removeUser(user);
                 if (success) {
-                    event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Unblocked user " + user.getAsTag(), Color.PINK)).queue();
+                    event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Unblocked user " + UsernameUtils.getUsername(user), Color.PINK)).queue();
                 } else {
                     event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Internal error", Color.RED)).queue();
                 }
