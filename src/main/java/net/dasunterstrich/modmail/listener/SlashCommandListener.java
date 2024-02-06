@@ -3,6 +3,7 @@ package net.dasunterstrich.modmail.listener;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dasunterstrich.modmail.modmail.BlocklistManager;
 import net.dasunterstrich.modmail.modmail.ModmailManager;
+import net.dasunterstrich.modmail.modmail.NotificationManager;
 import net.dasunterstrich.modmail.utils.EmbedUtils;
 import net.dasunterstrich.modmail.utils.UsernameUtils;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
@@ -10,6 +11,8 @@ import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.utils.Result;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.util.concurrent.Executors;
@@ -17,11 +20,14 @@ import java.util.concurrent.Executors;
 public class SlashCommandListener extends ListenerAdapter {
     private final ModmailManager modmailManager;
     private final BlocklistManager blocklistManager;
+    private final NotificationManager notificationManager;
     private final Dotenv config;
+    private static final Logger logger = LoggerFactory.getLogger(SlashCommandListener.class);
 
-    public SlashCommandListener(ModmailManager modmailManager, BlocklistManager blocklistManager, Dotenv config) {
+    public SlashCommandListener(ModmailManager modmailManager, BlocklistManager blocklistManager, NotificationManager notificationManager, Dotenv config) {
         this.modmailManager = modmailManager;
         this.blocklistManager = blocklistManager;
+        this.notificationManager = notificationManager;
         this.config = config;
     }
 
@@ -37,6 +43,8 @@ public class SlashCommandListener extends ListenerAdapter {
             blocklist(event);
         } else if (event.getFullCommandName().equals("close")) {
             close(event);
+        } else if (event.getFullCommandName().startsWith("notifications")) {
+            notifications(event);
         }
     }
 
@@ -63,16 +71,12 @@ public class SlashCommandListener extends ListenerAdapter {
             }
         } catch (Exception exception) {
             event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Failed to create thread", Color.RED)).queue();
-            exception.printStackTrace();
+            logger.error("Could not contact user", exception);
         }
     }
 
     private void sendModmailThreadMessage(SlashCommandInteractionEvent event, ThreadChannel threadChannel) {
-        threadChannel.getManager().setArchived(false).queue(success -> {
-            threadChannel.sendMessage(event.getUser().getAsMention()).queue(message -> {
-                event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Modmail thread: \n<#" + threadChannel.getId() + ">", Color.PINK)).queue();
-            });
-        });
+        threadChannel.getManager().setArchived(false).queue(success -> threadChannel.sendMessage(event.getUser().getAsMention()).queue(message -> event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Modmail thread: \n<#" + threadChannel.getId() + ">", Color.PINK)).queue()));
     }
 
     private void blocklist(SlashCommandInteractionEvent event) {
@@ -88,22 +92,22 @@ public class SlashCommandListener extends ListenerAdapter {
                     event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Internal error", Color.RED)).queue();
                 }
             }
-            case "list" -> {
-                Executors.newSingleThreadExecutor().submit(() -> {
-                    var blockedUsers = blocklistManager.getBlockedUsers().stream()
-                            .map(userID -> event.getJDA().retrieveUserById(userID).mapToResult().complete())
-                            .filter(result -> !result.isFailure())
-                            .map(Result::get)
-                            .map(user -> UsernameUtils.getUsername(user) + " (" + user.getId() + ")")
-                            .toList();
 
-                    if (blockedUsers.isEmpty()) {
-                        event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("There are no users on the blocklist", Color.PINK)).queue();
-                    } else {
-                        event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Blocklist", String.join("\n", blockedUsers), Color.PINK)).queue();
-                    }
-                });
-            }
+            case "list" -> Executors.newSingleThreadExecutor().submit(() -> {
+                var blockedUsers = blocklistManager.getBlockedUsers().stream()
+                        .map(userID -> event.getJDA().retrieveUserById(userID).mapToResult().complete())
+                        .filter(result -> !result.isFailure())
+                        .map(Result::get)
+                        .map(user -> UsernameUtils.getUsername(user) + " (" + user.getId() + ")")
+                        .toList();
+
+                if (blockedUsers.isEmpty()) {
+                    event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("There are no users on the blocklist", Color.PINK)).queue();
+                } else {
+                    event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("Blocklist", String.join("\n", blockedUsers), Color.PINK)).queue();
+                }
+            });
+
             case "remove" -> {
                 var user = event.getOption("user").getAsUser();
                 var success = blocklistManager.removeUser(user);
@@ -134,4 +138,22 @@ public class SlashCommandListener extends ListenerAdapter {
             event.getHook().editOriginalEmbeds(EmbedUtils.buildEmbed("I cannot close threads which are not modmails", Color.RED)).queue();
         }
     }
-}
+
+    private void notifications(SlashCommandInteractionEvent event) {
+        if (event.getFullCommandName().split(" ")[1].equalsIgnoreCase("enable")) {
+            var success = notificationManager.optIn(event.getUser().getIdLong());
+            if (success) {
+                event.replyEmbeds(EmbedUtils.buildEmbed("You enabled modmail notifications for yourself", Color.PINK)).setEphemeral(true).queue();
+            } else {
+                event.replyEmbeds(EmbedUtils.buildEmbed("You already have modmail notifications enabled", Color.RED)).setEphemeral(true).queue();
+            }
+        } else {
+            var success = notificationManager.optOut(event.getUser().getIdLong());
+            if (success) {
+                event.replyEmbeds(EmbedUtils.buildEmbed("You disabled modmail notifications for yourself", Color.PINK)).setEphemeral(true).queue();
+            } else {
+                event.replyEmbeds(EmbedUtils.buildEmbed("You already have modmail notifications disabled", Color.RED)).setEphemeral(true).queue();
+            }
+        }
+    }
+ }

@@ -25,12 +25,14 @@ public class ModmailManager {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private final DatabaseHandler databaseHandler;
     private final BlocklistManager blocklistManager;
+    private final NotificationManager notificationManager;
     private final Dotenv config;
     private final HashMap<Long, Long> modmailThreads = new HashMap<>();
 
-    public ModmailManager(DatabaseHandler databaseHandler, BlocklistManager blocklistManager, Dotenv config) {
+    public ModmailManager(DatabaseHandler databaseHandler, BlocklistManager blocklistManager, NotificationManager notificationManager, Dotenv config) {
         this.databaseHandler = databaseHandler;
         this.blocklistManager = blocklistManager;
+        this.notificationManager = notificationManager;
         this.config = config;
 
         try (var connection = databaseHandler.getConnection(); var statement = connection.createStatement()) {
@@ -78,7 +80,15 @@ public class ModmailManager {
         if (modmailThread == null) throw new IllegalStateException();
 
         var openTag = modmailThread.getParentChannel().asForumChannel().getAvailableTagsByName("open", true);
-        modmailThread.getManager().setArchived(false).queue(s -> modmailThread.getManager().setAppliedTags(openTag).queue(null, throwable -> success.accept(false)));;
+
+        if (modmailThread.isArchived() || modmailThread.getAppliedTags().stream().noneMatch(tag -> tag.getName().equalsIgnoreCase("open"))) {
+            modmailThread.getManager().setArchived(false).queue(s -> modmailThread.getManager().setAppliedTags(openTag).queue(t -> {
+                var notificationText = notificationManager.getStringRepresentation();
+                if (notificationText.isBlank()) return;
+
+                modmailThread.sendMessage(notificationText).queue(null, throwable -> success.accept(false));
+            }, throwable -> success.accept(false)));
+        }
 
         if (!content.isEmpty()) {
             modmailThread.sendMessageEmbeds(EmbedUtils.buildEmbed(content, Color.PINK)).queue(message -> {
@@ -97,11 +107,7 @@ public class ModmailManager {
         if (attachments.isEmpty()) {
             success.accept(true);
         } else {
-            AttachmentSender.sendAttachment(modmailThread, attachments, success, error -> {
-                modmailThread.sendMessageEmbeds(EmbedUtils.buildEmbed("User tried to send at least one big file, unable to process it", Color.RED)).queue(secondSuccess -> {
-                    success.accept(true);
-                }, failure -> success.accept(false));
-            });
+            AttachmentSender.sendAttachment(modmailThread, attachments, success, error -> modmailThread.sendMessageEmbeds(EmbedUtils.buildEmbed("User tried to send at least one big file, unable to process it", Color.RED)).queue(secondSuccess -> success.accept(true), failure -> success.accept(false)));
         }
 
         if (!modmailThread.getName().equals(getForumTitle(user))) {
@@ -197,9 +203,7 @@ public class ModmailManager {
                             if (attachments.isEmpty()) {
                                 success.accept(true);
                             } else {
-                                AttachmentSender.sendAttachment(channel, attachments, success, v -> {
-                                    threadChannel.sendMessageEmbeds(EmbedUtils.buildEmbed("Attachment bigger than 8 MB, upload failed", Color.RED)).queue();
-                                });
+                                AttachmentSender.sendAttachment(channel, attachments, success, v -> threadChannel.sendMessageEmbeds(EmbedUtils.buildEmbed("Attachment bigger than 8 MB, upload failed", Color.RED)).queue());
                             }
 
                             databaseHandler.addModmailMessage(channel.getUser(), false, messageContent);

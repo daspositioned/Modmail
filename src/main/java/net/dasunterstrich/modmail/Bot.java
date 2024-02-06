@@ -5,6 +5,7 @@ import net.dasunterstrich.modmail.database.DatabaseHandler;
 import net.dasunterstrich.modmail.listener.*;
 import net.dasunterstrich.modmail.modmail.BlocklistManager;
 import net.dasunterstrich.modmail.modmail.ModmailManager;
+import net.dasunterstrich.modmail.modmail.NotificationManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.Permission;
@@ -28,13 +29,14 @@ public class Bot {
     public void start(Dotenv config) {
         var databaseHandler = initializeDatabase(config);
         var blocklistManager = new BlocklistManager(databaseHandler);
-        var modmailManager = new ModmailManager(databaseHandler, blocklistManager, config);
+        var notificationManager = new NotificationManager();
+        var modmailManager = new ModmailManager(databaseHandler, blocklistManager, notificationManager, config);
 
         JDA jda = JDABuilder.createDefault(readToken())
                 .setActivity(Activity.playing("with Bocchicord"))
                 .addEventListeners(
                         new DirectMessageListener(modmailManager, blocklistManager, config),
-                        new SlashCommandListener(modmailManager, blocklistManager, config),
+                        new SlashCommandListener(modmailManager, blocklistManager, notificationManager, config),
                         new ThreadDeletionListener(modmailManager),
                         new ChannelUpdateArchivedListener(modmailManager),
                         new UserTypingListener(modmailManager))
@@ -50,6 +52,13 @@ public class Bot {
                 Commands.slash("close", "Close a modmail thread")
                         .setGuildOnly(true)
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS)),
+                Commands.slash("notifications", "Toggles the modmail notifications")
+                        .setGuildOnly(true)
+                        .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS))
+                        .addSubcommands(
+                                new SubcommandData("enable", "Enables modmail notifications for yourself"),
+                                new SubcommandData("disable", "Disable modmail notifications for yourself")
+                        ),
                 Commands.slash("blocklist", "Manage the modmail blocklist")
                         .setGuildOnly(true)
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS))
