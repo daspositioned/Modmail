@@ -7,12 +7,16 @@ import net.dasunterstrich.modmail.utils.EmbedUtils;
 import net.dasunterstrich.modmail.utils.UsernameUtils;
 import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.entities.sticker.Sticker;
+import net.dv8tion.jda.api.entities.sticker.StickerItem;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class DirectMessageListener extends ListenerAdapter {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -42,14 +46,19 @@ public class DirectMessageListener extends ListenerAdapter {
         var threadChannel = (ThreadChannel) event.getChannel();
         if (!threadChannel.getParentChannel().getId().equals(config.get("FORUM_ID"))) return;
 
-        var messageContent = event.getMessage().getContentRaw();
+        var message = event.getMessage();
+        var messageContent = message.getContentRaw();
+        var attachments = message.getAttachments();
+        var stickers = message.getStickers();
+
         if (!messageContent.startsWith("!")) return;
         messageContent = messageContent.substring(1);
-        if (messageContent.isBlank() && event.getMessage().getAttachments().isEmpty()) return;
+        if (messageContent.isBlank() && attachments.isEmpty() && stickers.isEmpty()) return;
+        messageContent = getMessageContentWithStickers(messageContent, stickers);
 
-        modmailManager.sendModmailResponse(threadChannel, messageContent, event.getMessage().getAttachments(), success -> {
+        modmailManager.sendModmailResponse(threadChannel, messageContent, attachments, success -> {
             if (success) {
-                event.getMessage().addReaction(Emoji.fromUnicode("U+2705")).queue();
+                message.addReaction(Emoji.fromUnicode("U+2705")).queue();
             } else {
                 event.getChannel().sendMessageEmbeds(
                         EmbedUtils.buildEmbed(
@@ -69,11 +78,13 @@ public class DirectMessageListener extends ListenerAdapter {
             return;
         }
 
-        var messageContent = event.getMessage().getContentRaw();
-        var messageAttachments = event.getMessage().getAttachments();
+        var message = event.getMessage();
+        var messageContent = getMessageContentWithStickers(message.getContentRaw(), message.getStickers());
+        var messageAttachments = message.getAttachments();
+
         modmailManager.sendModmailMessage(user, messageContent, messageAttachments, success -> {
             if (success) {
-                event.getMessage().addReaction(Emoji.fromUnicode("U+2705")).queue();
+                message.addReaction(Emoji.fromUnicode("U+2705")).queue();
             } else {
                 event.getChannel().sendMessageEmbeds(
                         EmbedUtils.buildEmbed(
@@ -82,5 +93,23 @@ public class DirectMessageListener extends ListenerAdapter {
                 ).queue();
             }
         });
+    }
+
+    private String getMessageContentWithStickers(String previousContent, List<StickerItem> stickers) {
+        String messageContent = previousContent;
+
+        if (!stickers.isEmpty()) {
+            var joinedStickerUrls = stickers.stream()
+                    .map(Sticker::getIconUrl)
+                    .collect(Collectors.joining("\n"));
+
+            if (messageContent.isBlank()) {
+                messageContent = joinedStickerUrls;
+            } else {
+                messageContent += "\n\n" + joinedStickerUrls;
+            }
+        }
+
+        return messageContent;
     }
 }
