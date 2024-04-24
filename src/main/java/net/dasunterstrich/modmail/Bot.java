@@ -19,10 +19,6 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 public class Bot {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -32,7 +28,7 @@ public class Bot {
         var notificationManager = new NotificationManager();
         var modmailManager = new ModmailManager(databaseHandler, blocklistManager, notificationManager, config);
 
-        JDA jda = JDABuilder.createDefault(readToken())
+        JDA jda = JDABuilder.createDefault(config.get("BOT_TOKEN"))
                 .setActivity(Activity.playing("with Bocchicord"))
                 .addEventListeners(
                         new DirectMessageListener(modmailManager, blocklistManager, config),
@@ -73,15 +69,6 @@ public class Bot {
                 .queue();
 
         logger.info("Commands initialized");
-    }
-
-    private String readToken() {
-        try {
-            return Files.readAllLines(Path.of("token.txt")).get(0);
-        } catch (IOException e) {
-            logger.error("Token not found, please create a token.txt");
-            throw new RuntimeException(e);
-        }
     }
 
     private DatabaseHandler initializeDatabase(Dotenv config) {
