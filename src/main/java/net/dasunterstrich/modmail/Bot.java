@@ -39,8 +39,7 @@ public class Bot {
                         new SlashCommandListener(modmailManager, blocklistManager, notificationManager, config),
                         new ThreadDeletionListener(modmailManager),
                         new ChannelUpdateArchivedListener(modmailManager),
-                        new UserTypingListener(modmailManager),
-                        new GuildReadyListener()
+                        new UserTypingListener(modmailManager)
                 )
                 .setMemberCachePolicy(MemberCachePolicy.ONLINE)
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.DIRECT_MESSAGES, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.DIRECT_MESSAGE_TYPING)
