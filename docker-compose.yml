@@ -14,7 +14,7 @@ services:
       
   db:
     container_name: modmail_db
-    image: postgres:14.7
+    image: postgres:16.3
     restart: unless-stopped
     environment:
       - POSTGRES_USER=PUT_DATABASE_USERNAME_HERE
