@@ -1,11 +1,32 @@
-version: '3.7'
-
 services:
   bot:
+    container_name: modmail
     image: seliba/modmail-bot:latest
-    network_mode: host
+    depends_on:
+      - db
     restart: unless-stopped
     volumes:
       - ${PWD}/.env:/app/.env
       - ${PWD}/token.txt:/app/token.txt
       - ${PWD}/logs/:/app/logs/
+    networks:
+      - database
+      
+  db:
+    container_name: modmail_db
+    image: postgres:14.7
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=PUT_DATABASE_USERNAME_HERE
+      - POSTGRES_PASSWORD=PUT_DATABASE_PASSWORD_HERE
+    volumes:
+      - ./data:/var/lib/postgresql/data
+    networks:
+      - database
+    expose:
+      - 5432
+      
+networks:
+    database:
+        external: false
+        name: modmail_db
