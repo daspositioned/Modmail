@@ -1,5 +1,6 @@
 package net.dasunterstrich.modmail.listener;
 
+import io.github.cdimascio.dotenv.Dotenv;
 import net.dasunterstrich.modmail.modmail.ModmailManager;
 import net.dv8tion.jda.api.events.user.UserTypingEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -8,9 +9,11 @@ import java.sql.SQLException;
 
 public class UserTypingListener extends ListenerAdapter {
     private final ModmailManager modmailManager;
+    private final Dotenv config;
 
-    public UserTypingListener(ModmailManager modmailManager) {
+    public UserTypingListener(ModmailManager modmailManager, Dotenv config) {
         this.modmailManager = modmailManager;
+        this.config = config;
     }
 
     @Override
@@ -25,7 +28,7 @@ public class UserTypingListener extends ListenerAdapter {
         } catch (SQLException e) {
             // Ignore this, can't happen
         }
-        var modmailThread = event.getJDA().getGuildById(926228462379880538L).getThreadChannelById(modmailThreadID);
+        var modmailThread = event.getJDA().getGuildById(config.get("GUILD_ID")).getThreadChannelById(modmailThreadID);
         if (modmailThread == null) return;
 
         modmailThread.sendTyping().queue();
