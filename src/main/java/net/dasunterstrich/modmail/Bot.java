@@ -25,7 +25,7 @@ public class Bot {
     public void start(Dotenv config) {
         var databaseHandler = initializeDatabase(config);
         var blocklistManager = new BlocklistManager(databaseHandler);
-        var notificationManager = new NotificationManager();
+        var notificationManager = new NotificationManager(databaseHandler);
         var modmailManager = new ModmailManager(databaseHandler, blocklistManager, notificationManager, config);
 
         JDA jda = JDABuilder.createDefault(config.get("BOT_TOKEN"))

@@ -29,8 +29,8 @@ public class DatabaseHandler {
         try {
             var connection = dataSource.getConnection();
             connection.close();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        } catch (SQLException exception) {
+            throw new RuntimeException(exception);
         }
     }
 
@@ -39,6 +39,7 @@ public class DatabaseHandler {
             statement.execute("CREATE TABLE IF NOT EXISTS modmail_threads (user_id BIGINT PRIMARY KEY, thread_id BIGINT)");
             statement.execute("CREATE TABLE IF NOT EXISTS modmail_messages (id SERIAL PRIMARY KEY, user_id BIGINT, user_message BOOLEAN, content TEXT, timestamp BIGINT)");
             statement.execute("CREATE TABLE IF NOT EXISTS modmail_blocklist (user_id BIGINT PRIMARY KEY)");
+            statement.execute("CREATE TABLE IF NOT EXISTS modmail_notifications (user_id BIGINT PRIMARY KEY)");
         } catch (SQLException exception) {
             logger.error("Could not create tables", exception);
             System.exit(-1);

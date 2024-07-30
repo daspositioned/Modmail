@@ -6,8 +6,8 @@ services:
       - db
     restart: unless-stopped
     volumes:
-      - ${PWD}/.env:/app/.env
-      - ${PWD}/logs/:/app/logs/
+      - ./.env:/app/.env
+      - ./logs/:/app/logs/
     networks:
       - database
       
@@ -16,8 +16,9 @@ services:
     image: postgres:16.3
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=PUT_DATABASE_USERNAME_HERE
-      - POSTGRES_PASSWORD=PUT_DATABASE_PASSWORD_HERE
+      - POSTGRES_USER=modmail
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=modmail
     volumes:
       - ./data:/var/lib/postgresql/data
     networks:
