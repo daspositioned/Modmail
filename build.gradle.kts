@@ -16,7 +16,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.11")
     implementation("io.github.cdimascio:dotenv-java:3.0.2")
 
-    implementation("net.dv8tion:JDA:5.1.2") {
+    implementation("net.dv8tion:JDA:5.2.1") {
         exclude("opus-java")
     }
 }
