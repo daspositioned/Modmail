@@ -11,7 +11,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.zaxxer:HikariCP:6.2.1")
+    implementation("com.zaxxer:HikariCP:6.3.0")
     implementation("com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9")
     implementation("ch.qos.logback:logback-classic:1.5.17")
     implementation("io.github.cdimascio:dotenv-java:3.2.0")
