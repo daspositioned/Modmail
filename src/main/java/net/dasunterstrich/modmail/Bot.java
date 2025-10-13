@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.interactions.InteractionContextType;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -43,21 +44,21 @@ public class Bot {
 
         jda.updateCommands().addCommands(
                 Commands.slash("contactuser", "Open a modmail thread for a user")
-                        .setGuildOnly(true)
+                        .setContexts(InteractionContextType.GUILD)
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS))
                         .addOption(OptionType.USER, "user", "The user to contact", true),
                 Commands.slash("close", "Close a modmail thread")
-                        .setGuildOnly(true)
+                        .setContexts(InteractionContextType.GUILD)
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS)),
                 Commands.slash("notifications", "Toggles the modmail notifications")
-                        .setGuildOnly(true)
+                        .setContexts(InteractionContextType.GUILD)
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS))
                         .addSubcommands(
                                 new SubcommandData("enable", "Enables modmail notifications for yourself"),
                                 new SubcommandData("disable", "Disable modmail notifications for yourself")
                         ),
                 Commands.slash("blocklist", "Manage the modmail blocklist")
-                        .setGuildOnly(true)
+                        .setContexts(InteractionContextType.GUILD)
                         .setDefaultPermissions(DefaultMemberPermissions.enabledFor(Permission.BAN_MEMBERS))
                         .addSubcommands(
                                 new SubcommandData("add", "Add a user to the blocklist")
