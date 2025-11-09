@@ -199,7 +199,8 @@ public class ModmailManager {
                             threadChannel.sendMessageEmbeds(EmbedUtils.buildEmbed("Warning: User is on blocklist and can't reply", Color.YELLOW)).queue();
                         }
 
-                        channel.sendMessageEmbeds(EmbedUtils.buildEmbed("New Message from the Bocchicord Moderation Team", messageContent, Color.PINK)).queue(messageSuccess -> {
+                        var guildName = threadChannel.getGuild().getName();
+                        channel.sendMessageEmbeds(EmbedUtils.buildEmbed("New Message from the " + guildName + " Moderation Team", messageContent, Color.PINK)).queue(messageSuccess -> {
                             if (attachments.isEmpty()) {
                                 success.accept(true);
                             } else {

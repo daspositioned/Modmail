@@ -30,7 +30,7 @@ public class Bot {
         var modmailManager = new ModmailManager(databaseHandler, blocklistManager, notificationManager, config);
 
         JDA jda = JDABuilder.createDefault(config.get("BOT_TOKEN"))
-                .setActivity(Activity.playing("with Bocchicord"))
+                .setActivity(Activity.playing(config.get("BOT_PLAYING_ACTIVITY")))
                 .addEventListeners(
                         new DirectMessageListener(modmailManager, blocklistManager, config),
                         new SlashCommandListener(modmailManager, blocklistManager, notificationManager, config),
