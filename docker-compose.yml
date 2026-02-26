@@ -13,7 +13,7 @@ services:
       
   db:
     container_name: modmail_db
-    image: postgres:18.0
+    image: postgres:18.3
     restart: unless-stopped
     environment:
       - POSTGRES_USER=modmail
