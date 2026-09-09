@@ -102,8 +102,6 @@ public class ModmailManager {
             }, failure -> success.accept(false));
         }
 
-        databaseHandler.addModmailMessage(user, true, content);
-
         if (attachments.isEmpty()) {
             success.accept(true);
         } else {
@@ -206,8 +204,6 @@ public class ModmailManager {
                             } else {
                                 AttachmentSender.sendAttachment(channel, attachments, success, v -> threadChannel.sendMessageEmbeds(EmbedUtils.buildEmbed("Attachment bigger than 8 MB, upload failed", Color.RED)).queue());
                             }
-
-                            databaseHandler.addModmailMessage(channel.getUser(), false, messageContent);
                         }, throwable -> {
                             logger.warn("User has DMs closed");
                             disabledDMs.accept(null);
