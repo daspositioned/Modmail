@@ -13,7 +13,7 @@ repositories {
 dependencies {
     implementation("com.zaxxer:HikariCP:7.1.0")
     implementation("com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9")
-    implementation("ch.qos.logback:logback-classic:1.5.32")
+    implementation("ch.qos.logback:logback-classic:1.6.3")
     implementation("io.github.cdimascio:dotenv-java:3.2.0")
 
     implementation("net.dv8tion:JDA:6.6.0") {
