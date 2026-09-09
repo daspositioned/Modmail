@@ -139,9 +139,9 @@ public class ModmailManager {
         var userID = modmailEntry.get().getKey();
         try (var connection = databaseHandler.getConnection(); var statement = connection.createStatement()) {
             statement.execute("DELETE FROM modmail_threads WHERE thread_id = " + threadID);
-            logger.info("Deleted thread " + threadChannel.getName());
+            logger.info("Deleted thread {}", threadChannel.getName());
         } catch (SQLException exception) {
-            logger.error("Could not delete thread " + threadChannel.getName(), exception);
+            logger.error("Could not delete thread {}", threadChannel.getName(), exception);
         }
 
         modmailThreads.remove(userID);
@@ -185,7 +185,7 @@ public class ModmailManager {
 
             if (modmailEntry.isEmpty()) {
                 success.accept(false);
-                logger.error("Modmail entry empty + " + threadChannel.getIdLong());
+                logger.error("Modmail entry empty + {}", threadChannel.getIdLong());
                 return;
             }
 

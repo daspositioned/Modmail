@@ -28,7 +28,7 @@ public class AttachmentSender {
                     try {
                         var inputStream = attachment.getProxy().download().get();
                         if (inputStream.readAllBytes().length > MAX_FILE_SIZE) {
-                            logger.warn("Too big file uploaded in " + channel.getName());
+                            logger.warn("Too big file uploaded in {}", channel.getName());
                             continue;
                         }
 

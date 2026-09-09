@@ -37,7 +37,7 @@ public class DirectMessageListener extends ListenerAdapter {
         if (event.isFromGuild() && !event.isWebhookMessage() && event.isFromThread()) {
             onGuildThreadMessage(event);
         } else if (!event.isFromGuild()) {
-            logger.info("Potential modmail from " + UsernameUtils.getUsername(event.getAuthor()));
+            logger.info("Potential modmail from {}", UsernameUtils.getUsername(event.getAuthor()));
             onPrivateMessage(event);
         }
     }
