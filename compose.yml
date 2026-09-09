@@ -9,7 +9,7 @@ services:
       - ./.env:/app/.env
       - ./logs/:/app/logs/
     networks:
-      - database
+      - modmail
       
   db:
     container_name: modmail_db
@@ -22,11 +22,11 @@ services:
     volumes:
       - ./data:/var/lib/postgresql/data
     networks:
-      - database
+      - modmail
     expose:
       - 5432
       
 networks:
-    database:
+  modmail:
         external: false
-        name: modmail_db
+        name: modmail_network
